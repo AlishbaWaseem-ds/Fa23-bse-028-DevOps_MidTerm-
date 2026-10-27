@@ -23,7 +23,7 @@
     };
     const errors = {};
     if (!clean.name) errors.name = 'Name is required.';
-    if (!clean.regNo) errors.regNo = 'Registration number is required.';
+   // if (!clean.regNo) errors.regNo = 'Registration number is required.';
     if (!clean.title) errors.title = 'Assignment title is required.';
     if (!clean.url) errors.url = 'Submission URL is required.';
     else if (!isValidUrl(clean.url)) errors.url = 'Enter a valid http(s) URL.';
