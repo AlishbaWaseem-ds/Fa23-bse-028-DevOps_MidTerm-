@@ -33,7 +33,8 @@ async function main() {
     summary: { total: tests.length, passed, failed, status: failed === 0 && tests.length > 0 ? 'passed' : 'failed' },
   };
 
-  fs.writeFileSync('report.json', JSON.stringify(report, null, 2));
+  // Fixed to test-report.json
+  fs.writeFileSync('test-report.json', JSON.stringify(report, null, 2));
   console.log(`\nTests: ${passed}/${tests.length} passed -> ${report.summary.status.toUpperCase()}`);
 
   if (env.RECEIVER_URL) {
@@ -46,7 +47,7 @@ async function main() {
       console.error('Could not deliver report to receiver:', e.message);
     }
   } else {
-    console.log('RECEIVER_URL not set; report saved to report.json only.');
+    console.log('RECEIVER_URL not set; report saved to test-report.json only.');
   }
   process.exit(report.summary.status === 'passed' ? 0 : 1);
 }

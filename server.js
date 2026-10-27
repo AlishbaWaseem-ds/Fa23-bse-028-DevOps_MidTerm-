@@ -18,6 +18,29 @@ function createServer(dataFile = path.join(__dirname, 'data', 'submissions.json'
   return http.createServer((req, res) => {
     const url = new URL(req.url, 'http://localhost');
 
+    // Handle CI Test Report Receiver Endpoint
+    if (url.pathname === '/report' && req.method === 'GET') {
+      res.writeHead(200, { 'Content-Type': 'text/plain' });
+      return res.end('POST reports to /report');
+    }
+
+    if (url.pathname === '/report' && req.method === 'POST') {
+      let body = '';
+      req.on('data', (c) => { body += c; if (body.length > 1e6) req.destroy(); });
+      req.on('end', () => {
+        try {
+          const reportData = JSON.parse(body || '{}');
+          // Automatically save incoming report payload as test-report.json locally
+          fs.writeFileSync('test-report.json', JSON.stringify(reportData, null, 2));
+          console.log(`[Received] Test report saved locally. Status: ${reportData.summary.status.toUpperCase()}`);
+          return json(res, 200, { message: 'Report received and saved.' });
+        } catch (e) {
+          return json(res, 400, { error: 'Invalid JSON payload.' });
+        }
+      });
+      return;
+    }
+
     if (url.pathname === '/api/submissions' && req.method === 'GET') {
       return json(res, 200, store.all());
     }
@@ -52,4 +75,4 @@ module.exports = { createServer };
 if (require.main === module) {
   const port = process.env.PORT || 3000;
   createServer().listen(port, () => console.log(`Portal running at http://localhost:${port}`));
-}
+} 
