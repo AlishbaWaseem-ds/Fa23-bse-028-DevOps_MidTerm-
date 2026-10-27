@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Run tests and send report to receiver
+        env:
+          RECEIVER_URL: ${{ secrets.RECEIVER_URL }}      # e.g. https://xxxx.ngrok-free.app/report
+          RECEIVER_TOKEN: ${{ secrets.RECEIVER_TOKEN }}  # optional shared secret
+        run: npm test
+      - name: Upload report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: report.json
+
+  email:
+    # Bonus: email the report after both passing and failing runs
+    needs: test
+    if: always() && vars.EMAIL_TO != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: test-report
+      - name: Build email summary
+        run: |
+          echo "RESULT=$(jq -r .summary.status report.json)" >> $GITHUB_ENV
+          jq -r '"Commit: \(.commitSha)\nResult: \(.summary.status)\nTotal: \(.summary.total)  Passed: \(.summary.passed)  Failed: \(.summary.failed)\n\n" + (.tests | map("- [\(.result)] \(.name) \(.failureMessage // "")") | join("\n"))' report.json > summary.txt
+      - uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: 465
+          secure: true
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "CI ${{ env.RESULT }}: ${{ github.repository }} @ ${{ github.sha }}"
+          to: ${{ vars.EMAIL_TO }}
+          from: CI Reports <${{ secrets.SMTP_USERNAME }}>
+          body: file://summary.txt
+          attachments: report.json
+
+  deploy:
+    # Bonus: publish static frontend to GitHub Pages only if tests passed, on main
+    needs: test
+    if: github.ref == 'refs/heads/main' && needs.test.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+      - id: deployment
+        uses: actions/deploy-pages@v4

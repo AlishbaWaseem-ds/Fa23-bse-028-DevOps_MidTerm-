@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Assignment Submission Portal</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header><h1>Assignment Submission Portal</h1><p>CSC418 DevOps</p></header>
+  <main>
+    <section class="card">
+      <h2>Submit an assignment</h2>
+      <form id="form" novalidate>
+        <label>Name <input name="name" id="name" autocomplete="name"></label>
+        <span class="err" data-for="name"></span>
+        <label>Registration number <input name="regNo" id="regNo" placeholder="FA23-BSE-028"></label>
+        <span class="err" data-for="regNo"></span>
+        <label>Assignment title <input name="title" id="title"></label>
+        <span class="err" data-for="title"></span>
+        <label>Submission URL <input name="url" id="url" placeholder="https://github.com/you/repo"></label>
+        <span class="err" data-for="url"></span>
+        <button type="submit">Submit</button>
+        <p id="msg" role="status"></p>
+      </form>
+    </section>
+    <section class="card">
+      <h2>Saved submissions <small id="mode"></small></h2>
+      <ul id="list"></ul>
+    </section>
+  </main>
+  <script src="validation.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

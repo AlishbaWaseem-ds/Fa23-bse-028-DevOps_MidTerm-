@@ -1,0 +1,4 @@
+node_modules/
+data/
+report.json
+test-report.json
